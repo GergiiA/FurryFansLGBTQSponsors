@@ -27,7 +27,7 @@ def send_data():
             messagebox.showerror("error", f"The server returned: {response.text}")
     except requests.exceptions.RequestException as e:
         messagebox.showerror("error", f"lox: {e}")
-
+#dfghj
 
 root = tk.Tk()
 root.title("client reg")
