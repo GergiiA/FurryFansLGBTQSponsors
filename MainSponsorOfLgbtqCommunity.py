@@ -1,8 +1,11 @@
 import tkinter as tk
-from tkinter import messagebox, filedialog
+from tkinter import messagebox, filedialog, ttk, PhotoImage
+from tkscrolledframe import ScrolledFrame
 import requests
 import json
 import base64
+from PIL import Image, ImageTk
+import io
 
 
 SERVER_URL = "http://127.0.0.1:5000"
@@ -98,28 +101,39 @@ def selectFileWrap():
     filePath=selectFile()
     if filePath is None:
         return
-    goto(create, args=[filePath])
+    goto(create2, args=['Image', filePath])
 
-def makePost(filePath, title):
+def makeImagePost(filePath, title):
     if filePath is None:
         messagebox.showerror("Error", "Please select a file")
         return
-    allowedFiletypes=['.png', '.jpg', 'jpeg']
+    allowedFiletypes=['png', 'jpg', 'jpeg']
+    #print(filePath.lower().split('.')[-1] )
     if filePath.lower().split('.')[-1] not in allowedFiletypes:
         messagebox.showerror("Error", "Incorrect file type")
         return
     image = open(filePath, 'rb').read()
-
-    data={'username': USERNAME, 'password': PASSWORD, 'title': title, 'file': base64.b64encode(image).decode(), 'fileTitle': filePath.split('/')[-1]}
+    size= Image.open(filePath).size
+    data={'postType': 'image', 'username': USERNAME, 'password': PASSWORD, 'title': title, 'file': base64.b64encode(image).decode(), 'fileTitle': filePath.split('/')[-1], 'size': size}
     json_data = json.dumps(data)
     #print(json_data)
     response = requests.post(SERVER_URL+'/newPost', data=json_data, headers={'Content-Type': 'application/json'})
     if response.text == 'True':
         messagebox.showinfo("Success", "Posted successfully")
-        goto(create)
+        goto(create2, args=['text'])
     else:
         messagebox.showerror("Error", "Failed to post")
-        goto(create, args=['', response.text])
+        goto(create2, args=['Image', response.text])
+
+def makeTextPost(title, text):
+    data={'postType': 'text', 'title': title, 'text': text, 'username': USERNAME, 'password': PASSWORD}
+    json_data = json.dumps(data)
+
+    answer = requests.post(SERVER_URL+'/newPost', data=json_data, headers={'Content-Type': 'application/json'})
+    print(answer.text)
+    if answer.text == 'True':
+        messagebox.showinfo("Success", "Posted successfully")
+        goto(create2, ['Text'])
 
 def logout():
     saveData('None', 'None')
@@ -143,14 +157,32 @@ def requestSearch(prompt):
     data=json.dumps({'search': prompt})
 
     answer = requests.post(SERVER_URL+'/searchUsers', data=data, headers={'Content-Type': 'application/json'})
-    print(answer.text)
+    #print(answer.text)
     return json.loads(answer.text)
 
 def getDataAboutOtherUser(username):
-    data={'username': username}
+    data=json.dumps({'username': username, 'selfUsername': USERNAME, 'selfPassword': PASSWORD})
     answer = requests.get(SERVER_URL+'/getPublicUserData', json=data, headers={'Content-Type': 'application/json'})
-    print(answer.text)
+    #print(answer.text)
     return json.loads(answer.text)
+
+def subscribe(subscribeTo, subscribe=True):
+    data={'username': USERNAME, 'password': PASSWORD, 'subscribeTo': subscribeTo, 'subscribe':subscribe}
+
+    answer = requests.post(SERVER_URL+'/subscribe', json=data, headers={'Content-Type': 'application/json'})
+
+    if answer.text == 'True':
+        return True
+    else:
+        return answer
+
+def getlast10Posts(username, page=0):
+    data=json.dumps({'username': username, 'page': page})
+    #print(data)
+    answer = requests.get(SERVER_URL+'/getLast10Posts', json=data, headers={'Content-Type': 'application/json'})
+
+    json_data = json.loads(answer.text)
+    return json_data
 
 #tkinter windows
 def welcome():
@@ -246,10 +278,10 @@ def register(*args):
     return frame
 
 def main():
-    if not checkLogin(USERNAME, PASSWORD):
+    #if not checkLogin(USERNAME, PASSWORD):
         #goto(login)
         #return tk.Frame(root)
-        pass
+        #pass
     mainFrame = tk.Frame(root)
 
     furryFansLabel = tk.Label(mainFrame, text="FurryFans")
@@ -258,7 +290,7 @@ def main():
     welcomeBackText = tk.Label(mainFrame, text="Welcome back, "+str(USERNAME))
     welcomeBackText.grid(row=1, column=0)
 
-    createButton=tk.Button(mainFrame, text="Make post", command=lambda: goto(create))
+    createButton=tk.Button(mainFrame, text="Make post", command=lambda: goto(create2, ['Text']))
     createButton.grid(row=2, column=0)
 
     subscribesButton=tk.Button(mainFrame, text="Subscribes", command=lambda: goto(subscribes))
@@ -273,30 +305,58 @@ def main():
 
     return mainFrame
 
-def create(*args):
+def create2(*args):
     frame = tk.Frame(root)
 
     backButton = tk.Button(frame, text="Back", command=lambda: goto(main))
     backButton.grid(row=0, column=0)
 
-    filePathLabel = tk.Label(frame, text="File path: "+args[0] if len(args) >0 else "")
-    filePathLabel.grid(row=0, column=2)
+    textTypeButton = tk.Button(frame, text="Text post type", command=lambda: goto(create2, ['Text']))
+    textTypeButton.grid(row=1, column=0)
 
-    titleLabel = tk.Label(frame, text="Title: ")
-    titleLabel.grid(row=1, column=0)
+    textTypeButton = tk.Button(frame, text="Image post type", command=lambda: goto(create2, ['Image']))
+    textTypeButton.grid(row=1, column=1, sticky=tk.W)
 
-    titleInput = tk.Entry(frame, width=40)
-    titleInput.grid(row=1, column=1)
+    if args[0]=='Text':
+        titleLabel = tk.Label(frame, text="Title: ")
+        titleLabel.grid(row=2, column=0)
+
+        titleInput = tk.Entry(frame, width=40)
+        titleInput.grid(row=2, column=1)
+
+        textLabel = tk.Label(frame, text="Text: ")
+        textLabel.grid(row=3, column=0)
+
+        textInput = tk.Entry(frame, width=40)
+        textInput.grid(row=3, column=1)
+
+        uploadButton = tk.Button(frame, text="Make post", command=lambda: makeTextPost(titleInput.get(), textInput.get()))
+        uploadButton.grid(row=4, column=1)
 
 
-    selectFileButton = tk.Button(frame, text="upload file", command=lambda: selectFileWrap())
-    selectFileButton.grid(row=0, column=1)
+    elif args[0]=='Image':
+        filePathLabel = tk.Label(frame, text=f"File path: {args[1] if len(args) > 1 else ''}")
+        filePathLabel.grid(row=2, column=0)
 
-    errorLabel = tk.Label(frame, text=args[1] if len(args) >1 else "")
-    errorLabel.grid(row=2, column=0)
+        selectFileButton = tk.Button(frame, text="Upload file", command=lambda: selectFileWrap())
+        selectFileButton.grid(row=2, column=1)
 
-    uploadButton = tk.Button(frame, text="Make post", command=lambda: makePost(args[0] if len(args) >0 else None, titleInput.get()))
-    uploadButton.grid(row=2, column=1)
+        titleLabel = tk.Label(frame, text="Title: ")
+        titleLabel.grid(row=3, column=0)
+
+        titleInput = tk.Entry(frame, width=40)
+        titleInput.grid(row=3, column=1)
+
+
+
+        uploadButton = tk.Button(frame, text="Make post", command=lambda: makeImagePost(args[1] if len(args)>1 else '' ,titleInput.get()))
+        uploadButton.grid(row=4, column=1)
+
+
+
+
+
+
 
 
 
@@ -323,9 +383,10 @@ def subscribes():
     backButton.grid(row=0, column=0)
 
     subs=getSubscribes()
+    #print(subs)
     for index, sub in enumerate(subs):
-        a=tk.Button(frame, command=lambda: goto(viewSomeone(sub)))
-        a.grid(row=index, column=1)
+        tk.Button(frame, command=lambda s=sub: goto(viewSomeone, [s, [subscribes]]), text=sub).grid(row=index, column=1)
+
     if len(subs)==0:
         lbl=tk.Label(frame, text="No subscribes")
         lbl.grid(row=0, column=1)
@@ -334,8 +395,12 @@ def subscribes():
     return frame
 
 def search(*args):
-    frame = tk.Frame(root)
+    #args format
+    #0 is data from search
+    #1 is input string
 
+    frame = tk.Frame(root)
+    #print(args)
     backButton = tk.Button(frame, text="Back", command=lambda: goto(main))
     backButton.grid(row=0, column=0)
 
@@ -357,13 +422,19 @@ def search(*args):
         tk.Button(
             frame,
             text=str(result[1]),
-            command=lambda res=result: goto(viewSomeone, [res[1], args[0], inputString.get()])
+            command=lambda res=result: goto(viewSomeone, [res[1], [search ,[args[0], inputString.get()]]])
         ).grid(row=i + 1, column=1)
         #print(result)
 
     return frame
 
 def viewSomeone(*args):
+    #how aegs are suppost to be given
+    # 0 is username of person to view
+    # 1 is a list for back button
+    #   0 is name of function to go back
+    #   1 list for args which will be given to 0
+
     if len(args) == 0:
         goto(main)
     #print('args', args)
@@ -371,24 +442,86 @@ def viewSomeone(*args):
     frame = tk.Frame(root)
     data=getDataAboutOtherUser(args[0])
 
-    backButton = tk.Button(frame, text="Back", command=lambda: goto(search, [args[1], args[2],]))
+
+    backButton = tk.Button(frame, text="Back", command=lambda: goto(args[1][0], args[1][1] if len(args[1])>1 else []))
     backButton.grid(row=0, column=0)
 
     usernameLabel = tk.Label(frame, text="Username: "+args[0])
     usernameLabel.grid(row=0, column=1)
 
+    subscribers = tk.Label(frame, text="Subscribers: "+ str(data[2]))
+    subscribers.grid(row=0, column=2)
+
     polLabel = tk.Label(frame, text="Pol: "+data[0][0])
     polLabel.grid(row=1, column=1)
 
-    nomerMamiLabel = tk.Label(frame, text="NomerMami: "+data[0][1])
+    nomerMamiLabel = tk.Label(frame, text="Nomer Mami: "+data[0][1])
     nomerMamiLabel.grid(row=2, column=1)
 
     razmerLabel = tk.Label(frame, text="Razmer: "+data[0][2])
     razmerLabel.grid(row=3, column=1)
 
+    def subscribeAndUpdate():
+        if data[1]!='True':
+            subscribe(args[0])
+        else:
+            subscribe(args[0], False)
+        goto(viewSomeone, args)
+
+    subscribeButton = tk.Button(frame, text="Subscribe" if data[1]!='True' else 'Unsubscribe', command=subscribeAndUpdate)#lambda: subscribe(args[0]) if data[1]!='True' else subscribe(args[0], False))
+    subscribeButton.grid(row=1, column=2)
+
+
+    posts=getlast10Posts(args[0])
+
+
+    sf = ScrolledFrame(frame, width=640, height=480)
+    sf.grid(row=4, column=0, columnspan=3)#, side="top", expand=1, fill="both")
+
+    sf.bind_arrow_keys(frame)
+    sf.bind_scroll_wheel(frame)
+
+    #postsFrame = tk.Frame(frame)
+    postsFrame = sf.display_widget(tk.Frame)
+
+    for index, encriptedPost in enumerate(posts):
+        postFrame = tk.Frame(postsFrame, bg="black")
+
+        post=json.loads(base64.b64decode(encriptedPost[0]).decode('utf-8'))
+
+        titleLabel = tk.Label(postFrame, text=post['title'], bg="black")
+        titleLabel.config(font=("Arial", 25))
+        titleLabel.grid(row=0, column=2, sticky=tk.W)
+        print(post.keys())
+
+        if post['postType']=='text':
+            textPost = tk.Text(postFrame, width=40, height=10, bg="black")
+            textPost.insert(tk.INSERT, post['text'])
+            textPost.config(state=tk.DISABLED)
+            textPost.grid(row=1, column=2, sticky=tk.W)
+
+
+        elif post['postType'] == 'image':
+
+            image_bytes = base64.b64decode(post['file'])
+            image = Image.open(io.BytesIO(image_bytes))
+            imageSize = image.size
+            widthMult = imageSize[0]/200
+            #print(imageSize)
+            #print(widthMult)
+
+
+            image = image.resize((200, int(imageSize[1]/widthMult)), Image.LANCZOS)
+            img = ImageTk.PhotoImage(image)
+            panel = tk.Label(postFrame, image=img)
+            panel.image = img
+            panel.grid(row=2, column=2, sticky=tk.W)
+        postFrame.grid(row=index, column=0, sticky="nw")
+    #postsFrame.grid(row=4, column=1)
 
 
     return frame
+
 
 
 onStart()

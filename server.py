@@ -75,7 +75,7 @@ def createNewUser2():
         if cursor.fetchall() != []:
             return 'Username already exists'
 
-    userData = base64.b64encode(json.dumps({'subscribes':[], }).encode('utf-8')).decode('utf-8')
+    userData = base64.b64encode(json.dumps({'subscribes':[], 'subscribers': 0}).encode('utf-8')).decode('utf-8')
 
     with sqlite3.connect('database.db') as db:
         cursor = db.cursor()
@@ -91,15 +91,31 @@ def newPost():
     if not checkLogin(jsonData['username'], jsonData['password']):
         return 'Wrong credentials'
 
-    data = base64.b64encode(json.dumps({'title': jsonData['title'], 'fileTitle':jsonData['fileTitle'], 'file': jsonData['file']}).encode('utf-8')).decode('utf-8')
+    if jsonData['postType']=='image':
+        if len(jsonData['file']) > 64000000:
+            return 'File too big'
 
-    with sqlite3.connect('database.db') as db:
-        cursor = db.cursor()
-        print(f'''INSERT INTO posts ('username', 'data') VALUES("{jsonData['username']}", "{data}")''')
-        cursor.execute(f'''INSERT INTO posts ('username', 'data') VALUES("{jsonData['username']}", "{data}")''')
-        db.commit()
+        data = base64.b64encode(json.dumps({'postType': 'image' ,'title': jsonData['title'], 'fileTitle':jsonData['fileTitle'], 'file': jsonData['file'], 'size': jsonData['size']}).encode('utf-8')).decode('utf-8')
 
-    return 'True'
+        with sqlite3.connect('database.db') as db:
+            cursor = db.cursor()
+            #print(f'''INSERT INTO posts ('username', 'data') VALUES("{jsonData['username']}", "{data}")''')
+            cursor.execute(f'''INSERT INTO posts ('username', 'data') VALUES("{jsonData['username']}", "{data}")''')
+            db.commit()
+
+        return 'True'
+
+    elif jsonData['postType']=='text':
+        data = base64.b64encode(json.dumps(
+            {'postType': 'text', 'title': jsonData['title'], 'text': jsonData['text']}).encode('utf-8')).decode('utf-8')
+
+        with sqlite3.connect('database.db') as db:
+            cursor = db.cursor()
+            print(f'''INSERT INTO posts ('username', 'data') VALUES("{jsonData['username']}", "{data}")''')
+            cursor.execute(f'''INSERT INTO posts ('username', 'data') VALUES("{jsonData['username']}", "{data}")''')
+            db.commit()
+
+        return 'True'
 
 @app.route('/login/', methods=['POST'])
 def login():
@@ -128,17 +144,46 @@ def getSubscribes():
         cursor = db.cursor()
         cursor.execute(f'''SELECT data FROM users WHERE username = "{data['username']}"''')
         userdata = json.loads(base64.b64decode(cursor.fetchall()[0][0]).decode('utf-8'))
-    print(userdata)
+    #print(userdata)
     return userdata['subscribes']
 
 @app.route('/subscribe', methods=['POST'])
 def subscribe():
     data = request.get_json(force=True)
+    print(data)
     if not checkLogin(data['username'], data['password']):
         return 'invalid credentials'
 
     with sqlite3.connect('database.db') as db:
-        pass
+        print(f'''SELECT data FROM users WHERE username = "{data['username']}"''')
+        cursor = db.cursor()
+        cursor.execute(f'''SELECT data FROM users WHERE username = "{data['username']}"''')
+        userdata = json.loads(base64.b64decode(cursor.fetchall()[0][0]).decode('utf-8'))
+        print(userdata)
+
+        if data['subscribe'] == True:
+            if data['subscribeTo'] not in userdata['subscribes']:
+                print('subscribed')
+                userdata['subscribes'].append(data['subscribeTo'])
+        elif data['subscribe'] == False:
+            if data['subscribeTo'] in userdata['subscribes']:
+                userdata['subscribes'].remove(data['subscribeTo'])
+
+        #print(f'''UPDATE users SET data = "{base64.b64encode(json.dumps(userdata).encode('utf-8')).decode('utf-8')}" WHERE username = "{data['username']}"''')
+        cursor.execute(f'''UPDATE users SET data = "{base64.b64encode(json.dumps(userdata).encode('utf-8')).decode('utf-8')}" WHERE username = "{data['username']}"''')#adding new data about who user is subscribed to database
+
+        cursor.execute(f'''SELECT data FROM users WHERE username = "{data['subscribeTo']}"''')
+        userdata = json.loads(base64.b64decode(cursor.fetchall()[0][0]).decode('utf-8'))
+        if 'subscribers' not in userdata.keys():
+            userdata['subscribers'] = 0
+        userdata['subscribers']= userdata['subscribers']+1 if data['subscribe'] else userdata['subscribers']-1
+        #print(userdata)
+        encoded = base64.b64encode(json.dumps(userdata).encode('utf-8')).decode('utf-8')
+        #print(encoded)
+
+        cursor.execute(f'''UPDATE users SET data="{encoded}" WHERE username = "{data['subscribeTo']}"''')
+
+        return 'True'
 
 @app.route('/searchUsers/', methods=['POST'])
 def searchUsers():
@@ -150,14 +195,49 @@ def searchUsers():
 
 @app.route('/getPublicUserData/', methods=['GET'])
 def getPublicUserData():
-    data=request.get_json(force=True)
+    data=json.loads(request.get_json(force=True))
+
     username = data['username']
 
     with sqlite3.connect('database.db') as db:
         cursor = db.cursor()
-        cursor.execute(f'''SELECT pol, NOMERMAMI, RAZMER FROM users WHERE username = "{username}"''')
+        cursor.execute(f'''SELECT pol, NOMERMAMI, RAZMER, data FROM users WHERE username = "{username}"''')
         userdata = cursor.fetchall()
+
+    #print(data)
+    selfUsername = data['selfUsername']
+    selfPassword = data['selfPassword']
+
+    if checkLogin(selfUsername, selfPassword):
+        with sqlite3.connect('database.db') as db:
+            cursor = db.cursor()
+            cursor.execute(f'''SELECT data FROM users WHERE username = "{selfUsername}"''')
+            selfUserdata = json.loads(base64.b64decode(cursor.fetchall()[0][0]).decode('utf-8'))
+            if username in selfUserdata['subscribes']:
+                userdata.append('True')
+            else:
+                userdata.append('False')
+    #print(userdata)
+    subCount = json.loads(base64.b64decode(userdata[0][3].encode('utf-8')).decode('utf-8'))['subscribers']
+    userdata.append(subCount)
+
     return json.dumps(userdata)
+
+@app.route('/getLast10Posts/', methods=['GET'])
+def getLast10Posts():
+    data=json.loads(request.get_json(force=True))
+    print(data)
+
+    with sqlite3.connect('database.db') as db:
+        cursor = db.cursor()
+        cursor.execute(f'''
+        SELECT data FROM posts WHERE username = "{data["username"]}" ORDER BY id LIMIT 10 OFFSET {data['page']}
+        ''')
+        postsData = cursor.fetchall()#json.loads(base64.b64decode(cursor.fetchall()[0][0]).decode('utf-8'))
+
+        #print(postsData)
+        #print(len(postsData))
+    return json.dumps(postsData)
 
 
 updateUserList()
