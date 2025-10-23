@@ -6,9 +6,13 @@ import json
 import base64
 from PIL import Image, ImageTk
 import io
+import urllib3
 
 
-SERVER_URL = "http://127.0.0.1:5000"
+urllib3.disable_warnings()
+
+
+SERVER_URL = "https://127.0.0.1:5000"
 root = tk.Tk()
 USERNAME = None
 PASSWORD = None
@@ -27,7 +31,7 @@ def checkLogin(username, password):
     data={'username': username, 'password': password}
     json_data = json.dumps(data)
 
-    answer = requests.post(SERVER_URL+'/login', data=json_data, headers={'Content-Type': 'application/json'})
+    answer = requests.post(SERVER_URL+'/login', data=json_data, headers={'Content-Type': 'application/json'}, verify=False)
 
     if answer.text == 'True':
         #global USERNAME, PASSWORD
@@ -42,7 +46,7 @@ def createNewUser(username, password, pol, nomermami, razmer):
     json_data = json.dumps(data)
 
 
-    answer = requests.post(SERVER_URL+'/createNewUser2', data=json_data, headers={'Content-Type': 'application/json'})
+    answer = requests.post(SERVER_URL+'/createNewUser2', data=json_data, headers={'Content-Type': 'application/json'}, verify=False)
 
     if answer.text == 'True':
         global USERNAME, PASSWORD
@@ -117,7 +121,7 @@ def makeImagePost(filePath, title):
     data={'postType': 'image', 'username': USERNAME, 'password': PASSWORD, 'title': title, 'file': base64.b64encode(image).decode(), 'fileTitle': filePath.split('/')[-1], 'size': size}
     json_data = json.dumps(data)
     #print(json_data)
-    response = requests.post(SERVER_URL+'/newPost', data=json_data, headers={'Content-Type': 'application/json'})
+    response = requests.post(SERVER_URL+'/newPost', data=json_data, headers={'Content-Type': 'application/json'}, verify=False)
     if response.text == 'True':
         messagebox.showinfo("Success", "Posted successfully")
         goto(create2, args=['text'])
@@ -129,7 +133,7 @@ def makeTextPost(title, text):
     data={'postType': 'text', 'title': title, 'text': text, 'username': USERNAME, 'password': PASSWORD}
     json_data = json.dumps(data)
 
-    answer = requests.post(SERVER_URL+'/newPost', data=json_data, headers={'Content-Type': 'application/json'})
+    answer = requests.post(SERVER_URL+'/newPost', data=json_data, headers={'Content-Type': 'application/json'}, verify=False)
     print(answer.text)
     if answer.text == 'True':
         messagebox.showinfo("Success", "Posted successfully")
@@ -141,7 +145,7 @@ def logout():
 
 def getSubscribes():
     data={'username': USERNAME, 'password': PASSWORD}
-    answer = requests.get(SERVER_URL+'/getSubscribes', json=data ,headers={'Content-Type': 'application/json'})
+    answer = requests.get(SERVER_URL+'/getSubscribes', json=data ,headers={'Content-Type': 'application/json'}, verify=False)
     #print(answer.text)
     if answer.text != 'invalid credentials':
         subscribes=json.loads(answer.text)
@@ -151,25 +155,25 @@ def getSubscribes():
         return []
 
 def getUsers():
-    answer=requests.get(SERVER_URL+'/getUsers')#, headers={'Content-Type': 'application/json'})
+    answer=requests.get(SERVER_URL+'/getUsers', verify=False)#, headers={'Content-Type': 'application/json'})
 
 def requestSearch(prompt):
     data=json.dumps({'search': prompt})
 
-    answer = requests.post(SERVER_URL+'/searchUsers', data=data, headers={'Content-Type': 'application/json'})
+    answer = requests.post(SERVER_URL+'/searchUsers', data=data, headers={'Content-Type': 'application/json'}, verify=False)
     #print(answer.text)
     return json.loads(answer.text)
 
 def getDataAboutOtherUser(username):
     data=json.dumps({'username': username, 'selfUsername': USERNAME, 'selfPassword': PASSWORD})
-    answer = requests.get(SERVER_URL+'/getPublicUserData', json=data, headers={'Content-Type': 'application/json'})
+    answer = requests.get(SERVER_URL+'/getPublicUserData', json=data, headers={'Content-Type': 'application/json'}, verify=False)
     #print(answer.text)
     return json.loads(answer.text)
 
 def subscribe(subscribeTo, subscribe=True):
     data={'username': USERNAME, 'password': PASSWORD, 'subscribeTo': subscribeTo, 'subscribe':subscribe}
 
-    answer = requests.post(SERVER_URL+'/subscribe', json=data, headers={'Content-Type': 'application/json'})
+    answer = requests.post(SERVER_URL+'/subscribe', json=data, headers={'Content-Type': 'application/json'}, verify=False)
 
     if answer.text == 'True':
         return True
@@ -179,7 +183,7 @@ def subscribe(subscribeTo, subscribe=True):
 def getlast10Posts(username, page=0):
     data=json.dumps({'username': username, 'page': page})
     #print(data)
-    answer = requests.get(SERVER_URL+'/getLast10Posts', json=data, headers={'Content-Type': 'application/json'})
+    answer = requests.get(SERVER_URL+'/getLast10Posts', json=data, headers={'Content-Type': 'application/json'}, verify=False)
 
     json_data = json.loads(answer.text)
     return json_data
