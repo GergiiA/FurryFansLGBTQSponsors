@@ -71,9 +71,6 @@ def updateUserList():
 def makePassword(password):
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-@app.route('/')
-def index():
-    return 'Hello World!'
 
 @limiter.limit('1 per minute')
 @app.route('/createNewUser2', methods=['POST'])
