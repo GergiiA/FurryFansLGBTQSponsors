@@ -51,9 +51,9 @@ def checkLogin(username, password):
     with sqlite3.connect('database.db') as db:
         cursor = db.cursor()
         cursor.execute(f'''SELECT password FROM users WHERE username = ?''', (username,))
-        data = cursor.fetchone()
+        data = cursor.fetchall()
         if len(data)==1:
-            if bcrypt.checkpw(password.encode('utf-8'), data[0].encode('utf-8')):
+            if bcrypt.checkpw(password.encode('utf-8'), data[0][0].encode('utf-8')):
                 return True
         return False
 
@@ -108,7 +108,7 @@ def createNewUser2():
     return 'True'
 
 @limiter.limit('10 per hour')
-@app.route('/newPost/', methods=['POST'])
+@app.route('/newPost', methods=['POST'])
 def newPost():
     jsonData = request.get_json(force=True)
     if not checkLogin(jsonData['username'], jsonData['password']):
@@ -134,11 +134,12 @@ def newPost():
     return 'True'
 
 @limiter.limit('2 per second')
-@app.route('/login/', methods=['POST'])
+@app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
     username = data['username']
     password = data['password']
+    print(data)
     if not checkLogin(username, password):
         return 'Username or password\n is incorrect'
     return 'True'
@@ -206,7 +207,7 @@ def subscribe():
         return 'True'
 
 @limiter.limit('1 per second')
-@app.route('/searchUsers/', methods=['POST'])
+@app.route('/searchUsers', methods=['POST'])
 def searchUsers():
     global userList
     search = request.get_json(force=True)['search']
@@ -215,7 +216,7 @@ def searchUsers():
     return json.dumps(bestResults)
 
 @limiter.limit('1 per second')
-@app.route('/getPublicUserData/', methods=['GET'])
+@app.route('/getPublicUserData', methods=['GET'])
 def getPublicUserData():
     data=json.loads(request.get_json(force=True))
 
@@ -226,7 +227,7 @@ def getPublicUserData():
         cursor.execute('''SELECT pol, NOMERMAMI, RAZMER, data FROM users WHERE username = ?''', (username,))
         userdata = cursor.fetchall()
 
-    #print(data)
+    print(data)
     selfUsername = data['selfUsername']
     selfPassword = data['selfPassword']
 
@@ -246,7 +247,7 @@ def getPublicUserData():
     return json.dumps(userdata)
 
 @limiter.limit('30 per minute')
-@app.route('/getLast10Posts/', methods=['GET'])
+@app.route('/getLast10Posts', methods=['GET'])
 def getLast10Posts():
     data=json.loads(request.get_json(force=True))
     print(data)
@@ -268,4 +269,5 @@ updateUserList()
 scheduler = APScheduler()
 scheduler.add_job(func=updateUserList, trigger='interval', seconds=5, id='updateUserList')
 scheduler.start()
-app.run(ssl_context=('httpsStuff/cert.pem', 'httpsStuff/key.pem'))#host='0.0.0.0', port=8080, )#debug=True)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)#ssl_context=('httpsStuff/cert.pem', 'httpsStuff/key.pem'))#host='0.0.0.0', port=8080, )#debug=True)

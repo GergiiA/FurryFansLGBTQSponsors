@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog, ttk, PhotoImage
+
+from pygments.lexers import q
 from tkscrolledframe import ScrolledFrame
 import requests
 import json
@@ -12,7 +14,7 @@ import urllib3
 urllib3.disable_warnings()
 
 
-SERVER_URL = "https://127.0.0.1:5000"
+SERVER_URL = "http://127.0.0.1:5000"
 root = tk.Tk()
 USERNAME = None
 PASSWORD = None
@@ -78,13 +80,15 @@ def checkLoginWrap(username, password):
 def onStart():
     global USERNAME, PASSWORD
     file=open('clientData.json', 'r')
-    if len(file.read())==0:#if file is empty write none to it
-        #file = open('clientData.json', 'w')
-        #file.write(json.dumps({'username': 'Tm9uZQ==', 'password': 'Tm9uZQ=='}))
-        #file.close()
-        saveData('Tm9uZQ==', 'Tm9uZQ==')
 
-    file = open('clientData.json', 'r')
+    #print(len(file.read()))
+    if len(file.read())==0:#if file is empty write none to it
+        file = open('clientData.json', 'w')
+        file.write(json.dumps({'username': 'Tm9uZQ==', 'password': 'Tm9uZQ=='}))
+        file.close()
+        #print("sadfsdf")
+
+    file=open('clientData.json', 'r')
     data=json.load(file)
     USERNAME=base64.b64decode(data['username']).decode()
     PASSWORD=base64.b64decode(data['password']).decode()
@@ -489,17 +493,17 @@ def viewSomeone(*args):
     postsFrame = sf.display_widget(tk.Frame)
 
     for index, encriptedPost in enumerate(posts):
-        postFrame = tk.Frame(postsFrame, bg="black")
+        postFrame = tk.Frame(postsFrame)
 
         post=json.loads(base64.b64decode(encriptedPost[0]).decode('utf-8'))
 
-        titleLabel = tk.Label(postFrame, text=post['title'], bg="black")
+        titleLabel = tk.Label(postFrame, text=post['title'])
         titleLabel.config(font=("Arial", 25))
         titleLabel.grid(row=0, column=2, sticky=tk.W)
         print(post.keys())
 
         if post['postType']=='text':
-            textPost = tk.Text(postFrame, width=40, height=10, bg="black")
+            textPost = tk.Text(postFrame, width=40, height=10)
             textPost.insert(tk.INSERT, post['text'])
             textPost.config(state=tk.DISABLED)
             textPost.grid(row=1, column=2, sticky=tk.W)
