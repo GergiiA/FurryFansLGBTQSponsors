@@ -27,6 +27,7 @@ with sqlite3.connect('database.db') as db:
     CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE,
+    email TEXT,
     password TEXT,
     pol TEXT,
     NOMERMAMI TEXT,
@@ -71,6 +72,12 @@ def updateUserList():
 def makePassword(password):
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
+def sendEmails():
+    global userlist
+
+    for user in userlist:
+        email = user[1]
+
 
 @limiter.limit('1 per minute')
 @app.route('/createNewUser2', methods=['POST'])
@@ -83,8 +90,8 @@ def createNewUser2():
         if value == '':
             return 'All data must be filled in'
 
-        if not re.match(r'^[a-zA-Z0-9_]{3,20}$', value):
-            return 'Invalid username format'
+        #if not re.match(r'^[a-zA-Z0-9_]{3,20}$', value):
+        #    return 'Invalid username format'
 
     if len(data['password'])<4:
         return 'Password must be at least 4 characters'
@@ -93,7 +100,7 @@ def createNewUser2():
         print(data['username'].lower())
         cursor = db.cursor()
         cursor.execute('''
-         SELECT * FROM users WHERE username = ?''', (data['username'].lower(),))
+        SELECT * FROM users WHERE username = ?''', (data['username'].lower(),))
         if cursor.fetchall() != []:
             return 'Username already exists'
 
@@ -102,8 +109,8 @@ def createNewUser2():
     with sqlite3.connect('database.db') as db:
         cursor = db.cursor()
         cursor.execute(f'''
-         INSERT INTO users ('username', 'password', 'pol', 'NOMERMAMI', 'RAZMER', 'data') VALUES(?, ?, ?, ?, ?, ?)
-         ''', (data['username'].lower(), makePassword(data['password']), data['pol'], data['momnum'], data['razmer'], userData))
+         INSERT INTO users ('username', 'email', 'password', 'pol', 'NOMERMAMI', 'RAZMER', 'data') VALUES(?, ?, ?, ?, ?, ?, ?)
+         ''', (data['username'].lower(), data['email'].lower(),makePassword(data['password']), data['pol'], data['momnum'], data['razmer'], userData))
         db.commit()
     return 'True'
 
