@@ -12,7 +12,8 @@ def send_data():
         "password": entry_password.get(),
         "momnum": entry_momnum.get(),
         "razmer": entry_razmer.get(),
-        "age": entry_age.get()
+        "age": entry_age.get(),
+        "email": entry_email.get()
     }
 
     if not all(data.values()):
@@ -27,7 +28,7 @@ def send_data():
             messagebox.showerror("error", f"The server returned: {response.text}")
     except requests.exceptions.RequestException as e:
         messagebox.showerror("error", f"lox: {e}")
-#dfghj
+
 
 root = tk.Tk()
 root.title("client reg")
@@ -56,6 +57,11 @@ tk.Label(root, text="Age:").grid(row=5, column=0, padx=10, pady=5)
 entry_age = tk.Entry(root)
 entry_age.grid(row=5, column=1, padx=10, pady=5)
 
-tk.Button(root, text="Send", command=send_data).grid(row=6, column=0, columnspan=2, pady=10)
+tk.Label(root, text="Email:").grid(row=6, column=0, padx=10, pady=5)
+entry_email = tk.Entry(root)
+entry_email.grid(row=6, column=1, padx=10, pady=5)
+
+tk.Button(root, text="Send", command=send_data).grid(row=7, column=0, columnspan=2, pady=10)
 
 root.mainloop()
+
