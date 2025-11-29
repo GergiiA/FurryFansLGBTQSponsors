@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog, ttk, PhotoImage
-
 from pygments.lexers import q
 from tkscrolledframe import ScrolledFrame
 import requests
@@ -9,6 +8,8 @@ import base64
 from PIL import Image, ImageTk
 import io
 import urllib3
+import math
+import random
 
 
 urllib3.disable_warnings()
@@ -194,92 +195,92 @@ def getlast10Posts(username, page=0):
 
 #tkinter windows
 def welcome():
-    frame1 = tk.Frame(root)
+    frame1 = ttk.Frame(root)
 
-    label = tk.Label(frame1, text="Welcome to FurryFans")
+    label = ttk.Label(frame1, text="Welcome to FurryFans")
     label.grid(row=0, column=0)
 
-    loginButton = tk.Button(frame1, text="Login", command=lambda: goto(login))
+    loginButton = ttk.Button(frame1, text="Login", command=lambda: goto(login))
     loginButton.grid(row=1, column=0)
 
-    registerButton = tk.Button(frame1, text="Register", command=lambda: goto(register))
+    registerButton = ttk.Button(frame1, text="Register", command=lambda: goto(register))
     registerButton.grid(row=2, column=0)
 
     return frame1
 
 def login(*args):
-    frame=tk.Frame(root)
+    frame=ttk.Frame(root)
 
-    backButton = tk.Button(frame, text="Back", command=lambda: goto(welcome))
+    backButton = ttk.Button(frame, text="Back", command=lambda: goto(welcome))
     backButton.grid(row=0, column=0)
 
-    login = tk.Label(frame, text="Login")
+    login = ttk.Label(frame, text="Login")
     login.grid(row=0, column=1)
 
-    usernameLabel = tk.Label(frame, text="Username")
+    usernameLabel = ttk.Label(frame, text="Username")
     usernameLabel.grid(row=1, column=0)
 
-    usernameEntry = tk.Entry(frame, width=40)
+    usernameEntry = ttk.Entry(frame, width=40)
     usernameEntry.grid(row=1, column=1)
 
-    passwordLabel = tk.Label(frame, text="Password")
+    passwordLabel = ttk.Label(frame, text="Password")
     passwordLabel.grid(row=2, column=0)
 
-    passwordEntry = tk.Entry(frame, width=40)
+    passwordEntry = ttk.Entry(frame, width=40)
     passwordEntry.grid(row=2, column=1)
 
-    errorLabel = tk.Label(frame, text=args[0] if len(args) else "")
+    errorLabel = ttk.Label(frame, text=args[0] if len(args) else "")
     errorLabel.grid(row=3, column=0)
 
-    submitButton = tk.Button(frame, text="Login", command=lambda: checkLoginWrap(usernameEntry.get(), passwordEntry.get()))
+    submitButton = ttk.Button(frame, text="Login", command=lambda: checkLoginWrap(usernameEntry.get(), passwordEntry.get()))
     submitButton.grid(row=4, column=0)
     submitButton.grid(row=3, column=1)
 
     return frame
 
 def register(*args):
-    frame = tk.Frame(root)
+    frame = ttk.Frame(root)
 
-    backButton = tk.Button(frame, text="Back", command=lambda: goto(welcome))
+    backButton = ttk.Button(frame, text="Back", command=lambda: goto(welcome))
     backButton.grid(row=0, column=0)
 
-    registerLabel = tk.Label(frame, text="Register")
+    registerLabel = ttk.Label(frame, text="Register")
     registerLabel.grid(row=0, column=1)
 
-    usernameLabel = tk.Label(frame, text="Username")
+    usernameLabel = ttk.Label(frame, text="Username")
     usernameLabel.grid(row=1, column=0)
 
-    usernameEntry = tk.Entry(frame, width=40)
+    usernameEntry = ttk.Entry(frame, width=40)
     usernameEntry.grid(row=1, column=1)
 
-    passwordLabel = tk.Label(frame, text="Password")
+    passwordLabel = ttk.Label(frame, text="Password")
     passwordLabel.grid(row=2, column=0)
 
-    passwordEntry = tk.Entry(frame, width=40)
+    passwordEntry = ttk.Entry(frame, width=40)
     passwordEntry.grid(row=2, column=1)
 
-    polLabel = tk.Label(frame, text="Pol")
+    polLabel = ttk.Label(frame, text="Pol")
     polLabel.grid(row=3, column=0)
 
-    polEntry = tk.Entry(frame, width=40)
+    polEntry = ttk.Entry(frame, width=40)
     polEntry.grid(row=3, column=1)
 
-    nomerMamiLabel = tk.Label(frame, text="Nomer Mami")
+    nomerMamiLabel = ttk.Label(frame, text="Nomer Mami")
     nomerMamiLabel.grid(row=4, column=0)
 
-    nomerMamiEntry = tk.Entry(frame, width=40)
+    nomerMamiEntry = ttk.Entry(frame, width=40)
     nomerMamiEntry.grid(row=4, column=1)
 
-    razmerLabel = tk.Label(frame, text="Razmer")
+    razmerLabel = ttk.Label(frame, text="Razmer")
     razmerLabel.grid(row=5, column=0)
 
-    razmerEntry = tk.Entry(frame, width=40)
+    razmerEntry = ttk.Entry(frame, width=40)
     razmerEntry.grid(row=5, column=1)
 
-    errorLabel = tk.Label(frame, text=args[0] if len(args) == 1 else "")
+    errorLabel = ttk.Label(frame, text=args[0] if len(args) == 1 else "")
     errorLabel.grid(row=6, column=0)
 
-    submitButton = tk.Button(frame, text="Register", command=lambda: createNewUserWrap(
+    submitButton = ttk.Button(frame, text="Register", command=lambda: createNewUserWrap(
         usernameEntry.get(), passwordEntry.get(), polEntry.get(), nomerMamiEntry.get(), razmerEntry.get()))
     submitButton.grid(row=6, column=1)
 
@@ -309,6 +310,9 @@ def main():
 
     searchButton = tk.Button(mainFrame, text="Search", command=lambda: goto(search))
     searchButton.grid(row=5, column=0)
+
+    freeSpinButton = tk.Button(mainFrame, text="Free Spin!!!", command=lambda: goto(freeSpin))
+    freeSpinButton.grid(row=6, column=0)
 
 
     return mainFrame
@@ -530,7 +534,87 @@ def viewSomeone(*args):
 
     return frame
 
+def freeSpin():
+    frame = tk.Frame(root)
 
+    backButton = tk.Button(frame, text="Back", command=lambda: goto(main))
+    backButton.grid(row=0, column=0)
+
+    canvas = tk.Canvas(frame, width=300, height=300, bg="white")
+    canvas.grid(row=1, column=0, columnspan=3)
+
+    # Roulette parameters
+    segments = 12
+    angle_step = 360 / segments
+    colors = ["red", "black"]
+
+    # Draw wheel
+    for i in range(segments):
+        canvas.create_arc(
+            10, 10, 290, 290,
+            start=i * angle_step,
+            extent=angle_step,
+            fill=colors[i % 2],
+            outline="white"
+        )
+
+    # Pointer (triangle)
+    pointer = canvas.create_polygon(
+        150, 10, 140, 40, 160, 40,
+        fill="gold"
+    )
+
+    # Draw circle center
+    canvas.create_oval(135,135,165,165,fill="black")
+
+    # Spin animation + result
+    def spin():
+        total_angle = random.randint(360*4, 360*7)  # 4–7 spins
+        step = 15  # degrees per update
+        current = 0
+
+        def do_spin():
+            nonlocal current
+            if current < total_angle:
+                current += step
+                canvas.delete("pointer_rot")
+
+                # rotate pointer around center
+                ang = math.radians(current)
+                cx, cy = 150, 150
+                px1, py1 = 150, 10   # original coords
+                px2, py2 = 140, 40
+                px3, py3 = 160, 40
+
+                def rot(x, y):
+                    x -= cx
+                    y -= cy
+                    xr = x*math.cos(ang) - y*math.sin(ang)
+                    yr = x*math.sin(ang) + y*math.cos(ang)
+                    return xr + cx, yr + cy
+
+                p1 = rot(px1, py1)
+                p2 = rot(px2, py2)
+                p3 = rot(px3, py3)
+
+                canvas.create_polygon(
+                    *p1, *p2, *p3,
+                    fill="gold", tag="pointer_rot"
+                )
+
+                canvas.after(10, do_spin)
+            else:
+                # compute result
+                final_angle = current % 360
+                segment = int((final_angle // angle_step)) % segments
+                print("Winning segment:", segment)
+
+        do_spin()
+
+    spinButton = tk.Button(frame, text="Spin", command=spin)
+    spinButton.grid(row=2, column=1)
+
+    return frame
 
 onStart()
 if checkLogin(USERNAME, PASSWORD)==True:

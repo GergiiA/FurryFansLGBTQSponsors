@@ -3,11 +3,9 @@ import rapidfuzz
 import flask
 from flask import request
 import sqlite3
-import hashlib
 import json
 from flask_apscheduler import APScheduler
 import bcrypt
-import re
 import flask_limiter
 from flask_limiter.util import get_remote_address
 app = flask.Flask(__name__)
@@ -77,7 +75,7 @@ def sendEmails():
 
     for user in userlist:
         email = user[1]
-
+        
 
 @limiter.limit('1 per minute')
 @app.route('/createNewUser2', methods=['POST'])
@@ -110,7 +108,7 @@ def createNewUser2():
         cursor = db.cursor()
         cursor.execute(f'''
          INSERT INTO users ('username', 'email', 'password', 'pol', 'NOMERMAMI', 'RAZMER', 'data') VALUES(?, ?, ?, ?, ?, ?, ?)
-         ''', (data['username'].lower(), data['email'].lower(),makePassword(data['password']), data['pol'], data['momnum'], data['razmer'], userData))
+         ''', (data['username'].lower(), '--',makePassword(data['password']), data['pol'], data['momnum'], data['razmer'], userData))
         db.commit()
     return 'True'
 
