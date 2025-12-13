@@ -314,6 +314,15 @@ def main():
     freeSpinButton = tk.Button(mainFrame, text="Free Spin!!!", command=lambda: goto(freeSpin))
     freeSpinButton.grid(row=6, column=0)
 
+    buster = Image.open("img/svinBuster.jpg")
+    buster = buster.resize((250, 250), )
+    buster = ImageTk.PhotoImage(buster)
+    print(buster.width(), buster.height())
+
+    lbl = tk.Label(mainFrame, image=buster)
+    lbl.image = buster
+    lbl.grid(row=1, column=1, sticky=tk.W)
+
 
     return mainFrame
 
@@ -537,84 +546,50 @@ def viewSomeone(*args):
 def freeSpin():
     frame = tk.Frame(root)
 
-    backButton = tk.Button(frame, text="Back", command=lambda: goto(main))
-    backButton.grid(row=0, column=0)
+    #backButton = tk.Button(frame, text="Back", command=lambda: goto(main))
+    #backButton.grid(row=0, column=0)
 
-    canvas = tk.Canvas(frame, width=300, height=300, bg="white")
-    canvas.grid(row=1, column=0, columnspan=3)
+    win1Logo = Image.open('img/1win.png')
+    win1Logo = win1Logo.resize((200, 200))
+    win1Logo = ImageTk.PhotoImage(win1Logo)
+    win1=tk.Button(frame, image=win1Logo, command=lambda: goto(win1Win, ))
+    win1.image = win1Logo
+    win1.grid(row=0, column=1)
 
-    # Roulette parameters
-    segments = 12
-    angle_step = 360 / segments
-    colors = ["red", "black"]
+    winLineLogo=Image.open('img/winline.png')
+    winLineLogo = winLineLogo.resize((200, 200))
+    winLineLogo = ImageTk.PhotoImage(winLineLogo)
+    winline = tk.Button(frame, image=winLineLogo, command=lambda: goto(main))
+    winline.image = winLineLogo
+    winline.grid(row=0, column=2)
 
-    # Draw wheel
-    for i in range(segments):
-        canvas.create_arc(
-            10, 10, 290, 290,
-            start=i * angle_step,
-            extent=angle_step,
-            fill=colors[i % 2],
-            outline="white"
-        )
+    arrow=Image.open('img/arrow.jpg')
+    arrow=arrow.resize((10, 12))
+    arrow = arrow.resize((200, 200))
+    arrow=ImageTk.PhotoImage(arrow)
+    arrw = tk.Label(frame, image=arrow)
+    arrw.image = arrow
+    arrw.grid(row=1, column=1)
 
-    # Pointer (triangle)
-    pointer = canvas.create_polygon(
-        150, 10, 140, 40, 160, 40,
-        fill="gold"
-    )
 
-    # Draw circle center
-    canvas.create_oval(135,135,165,165,fill="black")
-
-    # Spin animation + result
-    def spin():
-        total_angle = random.randint(360*4, 360*7)  # 4–7 spins
-        step = 15  # degrees per update
-        current = 0
-
-        def do_spin():
-            nonlocal current
-            if current < total_angle:
-                current += step
-                canvas.delete("pointer_rot")
-
-                # rotate pointer around center
-                ang = math.radians(current)
-                cx, cy = 150, 150
-                px1, py1 = 150, 10   # original coords
-                px2, py2 = 140, 40
-                px3, py3 = 160, 40
-
-                def rot(x, y):
-                    x -= cx
-                    y -= cy
-                    xr = x*math.cos(ang) - y*math.sin(ang)
-                    yr = x*math.sin(ang) + y*math.cos(ang)
-                    return xr + cx, yr + cy
-
-                p1 = rot(px1, py1)
-                p2 = rot(px2, py2)
-                p3 = rot(px3, py3)
-
-                canvas.create_polygon(
-                    *p1, *p2, *p3,
-                    fill="gold", tag="pointer_rot"
-                )
-
-                canvas.after(10, do_spin)
-            else:
-                # compute result
-                final_angle = current % 360
-                segment = int((final_angle // angle_step)) % segments
-                print("Winning segment:", segment)
-
-        do_spin()
-
-    spinButton = tk.Button(frame, text="Spin", command=spin)
-    spinButton.grid(row=2, column=1)
 
     return frame
+
+def win1Win():
+    frame = tk.Frame(root)
+    win1Logo = Image.open('img/1win.png')
+    win1Logo = win1Logo.resize((800, 100))
+    win1Logo = ImageTk.PhotoImage(win1Logo)
+    win1 = tk.Button(frame, image=win1Logo)
+    win1.image = win1Logo
+    win1.grid(row=0, column=0)
+
+    ruskayaRulletka = tk.Button(frame, text="Ruskaya Rulletks", command=lambda: ruskayaRulletkaSpin)
+    def ruskayaRulletkaSpin():
+        pass
+
+    return frame
+
 
 onStart()
 if checkLogin(USERNAME, PASSWORD)==True:
