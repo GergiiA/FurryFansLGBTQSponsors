@@ -15,12 +15,10 @@ import random
 urllib3.disable_warnings()
 
 
-global MONEY
 SERVER_URL = "http://127.0.0.1:5000"
 root = tk.Tk()
 USERNAME = None
 PASSWORD = None
-MONEY = 1000
 
 
 def clear_all_inside_frame(frame):
@@ -548,518 +546,50 @@ def viewSomeone(*args):
 def freeSpin():
     frame = tk.Frame(root)
 
-    tk.Label(frame, text="Choose Your Game", font=("Arial", 24, "bold")).pack(pady=20)
+    #backButton = tk.Button(frame, text="Back", command=lambda: goto(main))
+    #backButton.grid(row=0, column=0)
 
-    # 1Win Roulette Button
     win1Logo = Image.open('img/1win.png')
-    win1Logo = win1Logo.resize((200, 50))
+    win1Logo = win1Logo.resize((200, 200))
     win1Logo = ImageTk.PhotoImage(win1Logo)
-    btn_roulette = tk.Button(frame, image=win1Logo, command=lambda: goto(win1Win))
-    btn_roulette.image = win1Logo
-    btn_roulette.pack(pady=5)
-    tk.Label(frame, text="5x5 Roulette").pack()
+    win1=tk.Button(frame, image=win1Logo, command=lambda: goto(win1Win, ))
+    win1.image = win1Logo
+    win1.grid(row=0, column=1)
 
-    # Slots Button
-    btn_slots = tk.Button(frame, text="🎰 SLOTS 🎰", font=("Arial", 16, "bold"), 
-                          bg="gold", width=20, command=lambda: goto(game_slots))
-    btn_slots.pack(pady=10)
+    winLineLogo=Image.open('img/winline.png')
+    winLineLogo = winLineLogo.resize((200, 200))
+    winLineLogo = ImageTk.PhotoImage(winLineLogo)
+    winline = tk.Button(frame, image=winLineLogo, command=lambda: goto(main))
+    winline.image = winLineLogo
+    winline.grid(row=0, column=2)
 
-    # Coin Flip Button
-    btn_coin = tk.Button(frame, text="🪙 COIN FLIP 🪙", font=("Arial", 16, "bold"), 
-                         bg="silver", width=20, command=lambda: goto(game_coin_flip))
-    btn_coin.pack(pady=10)
-
-    # Dice Button
-    btn_dice = tk.Button(frame, text="🎲 DICE 🎲", font=("Arial", 16, "bold"), 
-                         bg="white", width=20, command=lambda: goto(game_dice))
-    btn_dice.pack(pady=10)
-
-    tk.Button(frame, text="DEPNUT POCHKU", command=lambda: goto(sellKidney)).pack(pady=10)
-
-    # Back Button
-    tk.Button(frame, text="Back to Main", command=lambda: goto(main)).pack(pady=20)
+    arrow=Image.open('img/arrow.jpg')
+    arrow=arrow.resize((10, 12))
+    arrow = arrow.resize((200, 200))
+    arrow=ImageTk.PhotoImage(arrow)
+    arrw = tk.Label(frame, image=arrow)
+    arrw.image = arrow
+    arrw.grid(row=1, column=1)
 
 
-    return frame
-
-def game_slots():
-    frame = tk.Frame(root)
-    
-    tk.Label(frame, text="🎰 SUPER SLOTS 🎰", font=("Arial", 24, "bold"), fg="gold", bg="purple").pack(fill=tk.X, pady=10)
-    
-    # Money Display
-    money_label = tk.Label(frame, text=f"Money: {MONEY}", font=("Arial", 16, "bold"), fg="green")
-    money_label.pack(pady=5)
-
-    # Reels
-    reels_frame = tk.Frame(frame, bg="black", bd=5, relief="sunken")
-    reels_frame.pack(pady=20)
-    
-    reel_labels = []
-    for i in range(3):
-        lbl = tk.Label(reels_frame, text="❓", font=("Segoe UI Emoji", 50), width=2, bg="white")
-        lbl.grid(row=0, column=i, padx=10, pady=10)
-        reel_labels.append(lbl)
-
-    # Bet Controls
-    bet_frame = tk.Frame(frame)
-    bet_frame.pack(pady=10)
-    
-    tk.Label(bet_frame, text="Bet Amount:").pack(side=tk.LEFT)
-    bet_entry = tk.Entry(bet_frame, width=10)
-    bet_entry.insert(0, "50")
-    bet_entry.pack(side=tk.LEFT, padx=5)
-
-    def update_money_display():
-        money_label.config(text=f"Money: {MONEY}")
-
-    def spin_slots():
-        global MONEY
-        try:
-            bet_amount = int(bet_entry.get())
-            if bet_amount <= 0:
-                messagebox.showerror("Error", "Bet must be positive!")
-                return
-            if bet_amount > MONEY:
-                messagebox.showerror("Error", "Not enough money!")
-                return
-        except ValueError:
-            messagebox.showerror("Error", "Invalid bet amount!")
-            return
-
-        MONEY -= bet_amount
-        update_money_display()
-        spin_btn.config(state=tk.DISABLED)
-
-        symbols = ["🍒", "🍋", "🔔", "💎", "7️⃣", "🍇"]
-        # Weights: Cherries/Lemons common, 7s rare
-        weights = [30, 30, 20, 10, 5, 5] 
-        
-        # Animation
-        steps = 20
-        
-        def animate(step):
-            global MONEY
-            if step < steps:
-                # Randomize reels
-                for lbl in reel_labels:
-                    lbl.config(text=random.choice(symbols))
-                frame.after(100, lambda: animate(step+1))
-            else:
-                # Final Result
-                final_symbols = []
-                for i in range(3):
-                    # Weighted choice
-                    sym = random.choices(symbols, weights=weights, k=1)[0]
-                    final_symbols.append(sym)
-                    reel_labels[i].config(text=sym)
-                
-                # Check Win
-                s1, s2, s3 = final_symbols
-                winnings = 0
-                
-                if s1 == s2 == s3:
-                    if s1 == "7️⃣":
-                        winnings = bet_amount * 50 # Jackpot
-                        messagebox.showinfo("JACKPOT!", f"777 JACKPOT!\nYou won {winnings}!")
-                    else:
-                        winnings = bet_amount * 10
-                        messagebox.showinfo("BIG WIN!", f"Triple {s1}!\nYou won {winnings}!")
-                elif s1 == s2 or s2 == s3 or s1 == s3:
-                    winnings = bet_amount * 2
-                    messagebox.showinfo("WIN!", f"Pair match!\nYou won {winnings}!")
-                else:
-                    # Loss
-                    pass
-                
-                if winnings > 0:
-                    MONEY += winnings
-                    update_money_display()
-                
-                spin_btn.config(state=tk.NORMAL)
-
-        animate(0)
-
-    spin_btn = tk.Button(frame, text="SPIN!", command=spin_slots, font=("Arial", 18, "bold"), bg="gold")
-    spin_btn.pack(pady=20)
-    
-    tk.Button(frame, text="Back", command=lambda: goto(freeSpin)).pack(pady=10)
-
-    return frame
-
-def game_coin_flip():
-    global MONEY
-    frame = tk.Frame(root)
-    
-    tk.Label(frame, text="🪙 COIN FLIP 🪙", font=("Arial", 24, "bold"), fg="gold", bg="blue").pack(fill=tk.X, pady=10)
-    
-    money_label = tk.Label(frame, text=f"Money: {MONEY}", font=("Arial", 16, "bold"), fg="green")
-    money_label.pack(pady=5)
-
-    # Coin Display
-    coin_label = tk.Label(frame, text="❓", font=("Segoe UI Emoji", 100))
-    coin_label.pack(pady=20)
-
-    # Bet Controls
-    bet_frame = tk.Frame(frame)
-    bet_frame.pack(pady=10)
-    
-    tk.Label(bet_frame, text="Bet Amount:").pack(side=tk.LEFT)
-    bet_entry = tk.Entry(bet_frame, width=10)
-    bet_entry.insert(0, "50")
-    bet_entry.pack(side=tk.LEFT, padx=5)
-
-    def update_money_display():
-        money_label.config(text=f"Money: {MONEY}")
-
-    def flip(choice):
-        global MONEY
-        try:
-            bet_amount = int(bet_entry.get())
-            if bet_amount <= 0:
-                messagebox.showerror("Error", "Bet must be positive!")
-                return
-            if bet_amount > MONEY:
-                messagebox.showerror("Error", "Not enough money!")
-                return
-        except ValueError:
-            messagebox.showerror("Error", "Invalid bet amount!")
-            return
-
-        MONEY -= bet_amount
-        update_money_display()
-        btn_heads.config(state=tk.DISABLED)
-        btn_tails.config(state=tk.DISABLED)
-
-        # Animation
-        steps = 20
-        
-        def animate(step):
-            global MONEY
-            if step < steps:
-                coin_label.config(text="🪙" if step % 2 == 0 else "⚪")
-                frame.after(50, lambda: animate(step+1))
-            else:
-                # Result
-                result = random.choice(["Heads", "Tails"])
-                coin_label.config(text="🦅" if result == "Heads" else "🪙") # Eagle for Heads, Coin for Tails
-                
-                if choice == result:
-                    winnings = bet_amount * 2
-                    MONEY += winnings
-                    messagebox.showinfo("WON!", f"It's {result}!\nYou won {winnings}!")
-                else:
-                    messagebox.showinfo("LOST", f"It's {result}.\nYou lost {bet_amount}.")
-                
-                update_money_display()
-                btn_heads.config(state=tk.NORMAL)
-                btn_tails.config(state=tk.NORMAL)
-
-        animate(0)
-
-    btn_frame = tk.Frame(frame)
-    btn_frame.pack(pady=20)
-
-    btn_heads = tk.Button(btn_frame, text="HEADS (x2)", font=("Arial", 14, "bold"), bg="silver", 
-                          command=lambda: flip("Heads"))
-    btn_heads.pack(side=tk.LEFT, padx=20)
-
-    btn_tails = tk.Button(btn_frame, text="TAILS (x2)", font=("Arial", 14, "bold"), bg="gold", 
-                          command=lambda: flip("Tails"))
-    btn_tails.pack(side=tk.LEFT, padx=20)
-    
-    tk.Button(frame, text="Back", command=lambda: goto(freeSpin)).pack(pady=10)
-
-    return frame
-
-def game_dice():
-    global MONEY
-    frame = tk.Frame(root)
-    
-    tk.Label(frame, text="🎲 LUCKY DICE 🎲", font=("Arial", 24, "bold"), fg="white", bg="red").pack(fill=tk.X, pady=10)
-    
-    money_label = tk.Label(frame, text=f"Money: {MONEY}", font=("Arial", 16, "bold"), fg="green")
-    money_label.pack(pady=5)
-
-    # Dice Display
-    dice_label = tk.Label(frame, text="🎲", font=("Segoe UI Emoji", 100))
-    dice_label.pack(pady=20)
-
-    # Bet Controls
-    bet_frame = tk.Frame(frame)
-    bet_frame.pack(pady=10)
-    
-    tk.Label(bet_frame, text="Bet Amount:").pack(side=tk.LEFT)
-    bet_entry = tk.Entry(bet_frame, width=10)
-    bet_entry.insert(0, "50")
-    bet_entry.pack(side=tk.LEFT, padx=5)
-
-    def update_money_display():
-        money_label.config(text=f"Money: {MONEY}")
-
-    def roll(bet_type, value=None):
-        global MONEY
-        try:
-            bet_amount = int(bet_entry.get())
-            if bet_amount <= 0:
-                messagebox.showerror("Error", "Bet must be positive!")
-                return
-            if bet_amount > MONEY:
-                messagebox.showerror("Error", "Not enough money!")
-                return
-        except ValueError:
-            messagebox.showerror("Error", "Invalid bet amount!")
-            return
-
-        MONEY -= bet_amount
-        update_money_display()
-        
-        # Disable all buttons (simplified)
-        # In a real app we'd disable all, here we just rely on the modal dialog blocking interaction mostly
-
-        # Animation
-        steps = 20
-        
-        def animate(step):
-            if step < steps:
-                dice_label.config(text=str(random.randint(1, 6)))
-                frame.after(50, lambda: animate(step+1))
-            else:
-                # Result
-                result = random.randint(1, 6)
-                dice_label.config(text=str(result))
-                
-                won = False
-                payout = 0
-                
-                if bet_type == "number":
-                    if result == value:
-                        won = True
-                        payout = 6
-                elif bet_type == "parity":
-                    if value == "Odd" and result % 2 != 0:
-                        won = True
-                        payout = 2
-                    elif value == "Even" and result % 2 == 0:
-                        won = True
-                        payout = 2
-                
-                if won:
-                    global MONEY
-                    winnings = bet_amount * payout
-                    MONEY += winnings
-                    messagebox.showinfo("WON!", f"Rolled {result}!\nYou won {winnings}!")
-                else:
-                    messagebox.showinfo("LOST", f"Rolled {result}.\nYou lost {bet_amount}.")
-                
-                update_money_display()
-
-        animate(0)
-
-    # Number Buttons
-    num_frame = tk.Frame(frame)
-    num_frame.pack(pady=10)
-    tk.Label(num_frame, text="Bet on Number (x6):").pack()
-    for i in range(1, 7):
-        tk.Button(num_frame, text=str(i), width=4, font=("Arial", 12),
-                  command=lambda v=i: roll("number", v)).pack(side=tk.LEFT, padx=2)
-
-    # Parity Buttons
-    parity_frame = tk.Frame(frame)
-    parity_frame.pack(pady=10)
-    tk.Label(parity_frame, text="Bet on Parity (x2):").pack()
-    tk.Button(parity_frame, text="ODD", width=8, bg="lightblue", command=lambda: roll("parity", "Odd")).pack(side=tk.LEFT, padx=5)
-    tk.Button(parity_frame, text="EVEN", width=8, bg="lightpink", command=lambda: roll("parity", "Even")).pack(side=tk.LEFT, padx=5)
-    
-    tk.Button(frame, text="Back", command=lambda: goto(freeSpin)).pack(pady=10)
 
     return frame
 
 def win1Win():
     frame = tk.Frame(root)
-    
-    # Header
     win1Logo = Image.open('img/1win.png')
-    win1Logo = win1Logo.resize((400, 100))
+    win1Logo = win1Logo.resize((800, 100))
     win1Logo = ImageTk.PhotoImage(win1Logo)
-    win1 = tk.Label(frame, image=win1Logo)
+    win1 = tk.Button(frame, image=win1Logo)
     win1.image = win1Logo
-    win1.grid(row=0, column=0, columnspan=5)
+    win1.grid(row=0, column=0)
 
-    # Money Display
-    money_label = tk.Label(frame, text=f"Money: {MONEY}", font=("Arial", 16, "bold"), fg="green")
-    money_label.grid(row=1, column=0, columnspan=5)
-
-    # Bet Controls
-    bet_frame = tk.Frame(frame)
-    bet_frame.grid(row=2, column=0, columnspan=5, pady=5)
-    
-    tk.Label(bet_frame, text="Bet Amount:").pack(side=tk.LEFT)
-    bet_entry = tk.Entry(bet_frame, width=10)
-    bet_entry.insert(0, "100")
-    bet_entry.pack(side=tk.LEFT, padx=5)
-
-    # 5x5 Grid
-    cells = []
-    # 0 = Red, 1 = Black (Checkerboard)
-    # We will use this for visual style
-    
-    grid_frame = tk.Frame(frame)
-    grid_frame.grid(row=3, column=0, columnspan=5)
-
-    for r in range(5):
-        row_cells = []
-        for c in range(5):
-            cell_val = r * 5 + c + 1
-            # Checkerboard pattern
-            bg_color = "red" if (r + c) % 2 == 0 else "black"
-            fg_color = "white"
-            
-            lbl = tk.Label(grid_frame, text=str(cell_val), width=6, height=3, 
-                           relief="raised", font=("Arial", 12, "bold"),
-                           bg=bg_color, fg=fg_color)
-            lbl.grid(row=r, column=c, padx=2, pady=2)
-            row_cells.append(lbl)
-        cells.append(row_cells)
-
-    def update_money_display():
-        money_label.config(text=f"Money: {MONEY}")
-
-    def spin(choice):
-        global MONEY
-        try:
-            bet_amount = int(bet_entry.get())
-            if bet_amount <= 0:
-                messagebox.showerror("Error", "Bet must be positive!")
-                return
-            if bet_amount > MONEY:
-                messagebox.showerror("Error", "Not enough money!")
-                return
-        except ValueError:
-            messagebox.showerror("Error", "Invalid bet amount!")
-            return
-
-        # Deduct bet
-        MONEY -= bet_amount
-        update_money_display()
-        
-        # Disable controls
-        btn_red.config(state=tk.DISABLED)
-        btn_black.config(state=tk.DISABLED)
-
-        # Animation parameters
-        total_steps = 40
-        delay = 50
-        current_step = 0
-        
-        def step():
-            global MONEY
-            nonlocal current_step, delay
-            
-            # "Spinning Disks" effect: Randomize numbers and colors briefly
-            for r in range(5):
-                for c in range(5):
-                    # Randomize number
-                    rand_num = random.randint(1, 99)
-                    cells[r][c].config(text=str(rand_num))
-                    
-                    # Randomize color slightly to simulate motion/blur? 
-                    # Or just keep checkerboard but highlight random ones?
-                    # Let's just highlight a random cell as the "active" one
-            
-            # Pick a random cell to highlight
-            r_sel = random.randint(0, 4)
-            c_sel = random.randint(0, 4)
-            
-            # Reset all to base colors
-            for r in range(5):
-                for c in range(5):
-                    base_bg = "red" if (r + c) % 2 == 0 else "black"
-                    cells[r][c].config(bg=base_bg)
-            
-            # Highlight selected
-            cells[r_sel][c_sel].config(bg="yellow")
-
-            current_step += 1
-            
-            if current_step < total_steps:
-                # Slow down
-                if current_step > total_steps - 10:
-                    delay += 20
-                frame.after(delay, step)
-            else:
-                # Final Result
-                final_r = random.randint(0, 4)
-                final_c = random.randint(0, 4)
-                
-                # Reset colors
-                for r in range(5):
-                    for c in range(5):
-                        base_bg = "red" if (r + c) % 2 == 0 else "black"
-                        cells[r][c].config(bg=base_bg)
-                
-                # Show winner
-                winner_color = "red" if (final_r + final_c) % 2 == 0 else "black"
-                cells[final_r][final_c].config(bg="green") # Winning cell
-                
-                won = False
-                if choice.lower() == winner_color:
-                    won = True
-                    winnings = bet_amount * 2
-                    MONEY += winnings
-                    messagebox.showinfo("WON!", f"You won {winnings}!\nResult: {winner_color.upper()}")
-                else:
-                    messagebox.showinfo("LOST", f"You lost {bet_amount}.\nResult: {winner_color.upper()}")
-                
-                update_money_display()
-                btn_red.config(state=tk.NORMAL)
-                btn_black.config(state=tk.NORMAL)
-
-        step()
-
-    # Bet Buttons
-    btn_frame = tk.Frame(frame)
-    btn_frame.grid(row=4, column=0, columnspan=5, pady=10)
-
-    btn_red = tk.Button(btn_frame, text="Bet RED (x2)", bg="red", fg="black", 
-                        font=("Arial", 12, "bold"), width=15,
-                        command=lambda: spin("red"))
-    btn_red.pack(side=tk.LEFT, padx=10)
-
-    btn_black = tk.Button(btn_frame, text="Bet BLACK (x2)", bg="black", fg="white", 
-                          font=("Arial", 12, "bold"), width=15,
-                          command=lambda: spin("black"))
-    btn_black.pack(side=tk.LEFT, padx=10)
+    ruskayaRulletka = tk.Button(frame, text="Ruskaya Rulletks", command=lambda: ruskayaRulletkaSpin)
+    def ruskayaRulletkaSpin():
+        pass
 
     return frame
 
-def sellKidney():
-    global MONEY
-
-    def addMoney(val):
-        global MONEY
-        try:
-            MONEY += int(val)
-        except:
-            messagebox.showerror("Error", "Error")
-        goto(sellKidney)
-
-
-    frame=tk.Frame(root)
-
-    backButton = ttk.Button(frame, text="Back", command=lambda: goto(freeSpin))
-    backButton.grid(row=0, column=0)
-
-    moneyLabel = ttk.Label(frame, text="Money:"+str(MONEY))
-    moneyLabel.grid(row=0, column=1)
-
-    m = tk.Entry(frame)
-    m.grid(row=1, column=0)
-
-    b=tk.Button(frame, text="Sell Kidney", command=lambda: addMoney(m.get()))
-    b.grid(row=2, column=0)
-
-    return frame
 
 onStart()
 if checkLogin(USERNAME, PASSWORD)==True:

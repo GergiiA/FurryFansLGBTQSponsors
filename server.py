@@ -75,7 +75,7 @@ def sendEmails():
 
     for user in userlist:
         email = user[1]
-        
+
 
 @limiter.limit('1 per minute')
 @app.route('/createNewUser2', methods=['POST'])
@@ -108,7 +108,7 @@ def createNewUser2():
         cursor = db.cursor()
         cursor.execute(f'''
          INSERT INTO users ('username', 'email', 'password', 'pol', 'NOMERMAMI', 'RAZMER', 'data') VALUES(?, ?, ?, ?, ?, ?, ?)
-         ''', (data['username'].lower(), '--',makePassword(data['password']), data['pol'], data['momnum'], data['razmer'], userData))
+         ''', (data['username'].lower(), data['email'].lower(),makePassword(data['password']), data['pol'], data['momnum'], data['razmer'], userData))
         db.commit()
     return 'True'
 
